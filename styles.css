@@ -52,6 +52,13 @@ nav {
   margin: 28px 0 12px;
 }
 
+.rings-layout {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
 .ring-graphic {
   position: relative;
   width: 320px;
@@ -68,15 +75,14 @@ nav {
 
 .ring span {
   position: absolute;
-  top: 10px;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
-  max-width: 80%;
-  font-size: 12px;
+  transform: translate(-50%, -50%);
+  font-size: 16px;
+  font-weight: 500;
   background: #fff;
   padding: 2px 6px;
-  line-height: 1.2;
-  white-space: nowrap;
+  line-height: 1;
 }
 
 .ring.outer {
@@ -99,6 +105,16 @@ nav {
   inset: 112px;
 }
 
+.ring-key {
+  min-width: 220px;
+  max-width: 320px;
+  margin: 24px 0;
+}
+
+.ring-key p {
+  margin-bottom: 8px;
+}
+
 .placeholder {
   margin-top: 12px;
   max-width: 560px;
@@ -119,6 +135,10 @@ nav {
   }
 
   .ring span {
-    font-size: 11px;
+    font-size: 14px;
+  }
+
+  .ring-key {
+    min-width: 200px;
   }
 }
