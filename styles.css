@@ -145,6 +145,269 @@ nav {
   cursor: not-allowed;
 }
 
+.creation-section {
+  margin-top: 48px;
+}
+
+.creation-grid {
+  display: grid;
+  gap: 32px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  align-items: start;
+}
+
+.avatar-stage {
+  position: relative;
+  min-height: 420px;
+  border: 1px solid #000;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(0, 0, 0, 0.08), transparent 40%),
+    radial-gradient(circle at 80% 30%, rgba(0, 0, 0, 0.05), transparent 45%),
+    #fff;
+  box-shadow:
+    inset 0 0 0 2px #fff,
+    0 0 22px rgba(0, 0, 0, 0.08);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  --skin-h: 28;
+  --skin-s: 45%;
+  --skin-l: 38;
+  --structure: 52;
+  --eye-depth: 60;
+  --jawline: 40;
+  --blend-archipelago: 35;
+  --blend-continental: 40;
+  --blend-highland: 30;
+  --blend-littoral: 50;
+}
+
+.avatar-holo {
+  width: 240px;
+  height: 320px;
+  position: relative;
+  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.2));
+}
+
+.avatar-head {
+  width: 180px;
+  height: 210px;
+  border-radius: 46% 46% 50% 50%;
+  margin: 0 auto;
+  background:
+    radial-gradient(
+      circle at 45% 40%,
+      hsla(var(--skin-h), var(--skin-s), calc(var(--skin-l) * 1%), 0.95),
+      hsla(var(--skin-h), var(--skin-s), calc(var(--skin-l) * 1% - 12%), 0.9)
+    ),
+    radial-gradient(
+      circle at 50% 65%,
+      rgba(0, 0, 0, 0.08),
+      transparent 60%
+    );
+  border: 1px solid #000;
+  position: relative;
+}
+
+.avatar-head::before,
+.avatar-head::after {
+  content: "";
+  position: absolute;
+  inset: 18% 12%;
+  border-radius: 42% 42% 48% 48%;
+  background:
+    radial-gradient(
+      circle at 35% 40%,
+      rgba(0, 0, 0, calc(var(--eye-depth) * 0.003)),
+      transparent 55%
+    ),
+    radial-gradient(
+      circle at 65% 40%,
+      rgba(0, 0, 0, calc(var(--eye-depth) * 0.003)),
+      transparent 55%
+    ),
+    linear-gradient(
+      130deg,
+      rgba(0, 0, 0, calc(var(--structure) * 0.002)),
+      transparent 60%
+    );
+  mix-blend-mode: multiply;
+}
+
+.avatar-head::after {
+  inset: 24% 18% 30%;
+  border-radius: 50%;
+  background:
+    radial-gradient(
+      circle at 50% 80%,
+      rgba(0, 0, 0, calc(var(--jawline) * 0.003)),
+      transparent 60%
+    );
+}
+
+.avatar-shoulders {
+  width: 220px;
+  height: 110px;
+  border-radius: 60% 60% 40% 40%;
+  margin: -20px auto 0;
+  border: 1px solid #000;
+  background:
+    linear-gradient(
+      120deg,
+      rgba(0, 0, 0, 0.06),
+      transparent 60%
+    ),
+    radial-gradient(
+      circle at 35% 40%,
+      hsla(var(--skin-h), var(--skin-s), calc(var(--skin-l) * 1% - 8%), 0.9),
+      transparent 70%
+    );
+}
+
+.avatar-stage::before {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border: 1px dashed rgba(0, 0, 0, 0.4);
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.avatar-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      circle at 30% 40%,
+      rgba(0, 0, 0, calc(var(--blend-archipelago) * 0.002)),
+      transparent 45%
+    ),
+    radial-gradient(
+      circle at 70% 35%,
+      rgba(0, 0, 0, calc(var(--blend-continental) * 0.002)),
+      transparent 45%
+    ),
+    radial-gradient(
+      circle at 40% 70%,
+      rgba(0, 0, 0, calc(var(--blend-highland) * 0.002)),
+      transparent 45%
+    ),
+    radial-gradient(
+      circle at 60% 80%,
+      rgba(0, 0, 0, calc(var(--blend-littoral) * 0.002)),
+      transparent 45%
+    );
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
+
+.avatar-readout {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: grid;
+  gap: 4px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.avatar-readout strong {
+  font-size: 12px;
+  letter-spacing: 0.2em;
+}
+
+.control-panel {
+  border: 1px solid #000;
+  padding: 24px;
+  display: grid;
+  gap: 20px;
+  background: #fff;
+  box-shadow:
+    inset 0 0 0 2px #fff,
+    0 0 22px rgba(0, 0, 0, 0.08);
+}
+
+.control-group h3 {
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  margin-bottom: 10px;
+}
+
+.control-note {
+  font-size: 12px;
+  margin-bottom: 10px;
+  letter-spacing: 0.06em;
+}
+
+.segmented {
+  display: grid;
+  grid-auto-flow: column;
+  gap: 8px;
+}
+
+.segmented input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.segmented label {
+  border: 1px solid #000;
+  padding: 8px 10px;
+  text-align: center;
+  cursor: pointer;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  box-shadow: 0 0 0 2px #fff;
+}
+
+.segmented input:checked + label {
+  background: #000;
+  color: #fff;
+}
+
+.slider-row {
+  display: grid;
+  gap: 8px;
+}
+
+.slider-row label {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+
+.slider-row input[type="range"] {
+  width: 100%;
+  appearance: none;
+  height: 2px;
+  background: #000;
+}
+
+.slider-row input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border: 1px solid #000;
+  background: #fff;
+  border-radius: 50%;
+}
+
+.slider-row input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 1px solid #000;
+  background: #fff;
+  border-radius: 50%;
+}
+
+.slider-row output {
+  font-size: 12px;
+  letter-spacing: 0.1em;
+}
+
 .rings-layout {
   display: flex;
   align-items: center;
@@ -246,5 +509,13 @@ nav {
 
   .scale {
     flex-wrap: wrap;
+  }
+
+  .avatar-stage {
+    min-height: 360px;
+  }
+
+  .control-panel {
+    padding: 18px;
   }
 }
