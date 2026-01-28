@@ -3,7 +3,11 @@ import { ensureUserIdCookie } from './src/lib/session/userCookie'
 
 export const middleware = (req: NextRequest) => {
   const res = NextResponse.next()
-  ensureUserIdCookie(req, res)
+  try {
+    ensureUserIdCookie(req, res)
+  } catch {
+    return res
+  }
   return res
 }
 
