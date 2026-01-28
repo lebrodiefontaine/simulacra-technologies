@@ -45,6 +45,20 @@ export const getLatestSession = async (userId: string) => {
   return data as OnboardingSession | null
 }
 
+export const getOrCreateSession = async (userId: string) => {
+  const existing = await getLatestSession(userId)
+  if (existing) {
+    return existing
+  }
+  const sessionId = await createSession(userId)
+  return {
+    id: sessionId,
+    user_id: userId,
+    status: 'in_progress',
+    answers_json: {},
+  } satisfies OnboardingSession
+}
+
 export const updateAnswersSnapshot = async (
   sessionId: string,
   answersJson: Record<string, unknown>,

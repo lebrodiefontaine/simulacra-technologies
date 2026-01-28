@@ -6,7 +6,7 @@ import {
   getFirstUnansweredQuestionId,
   getQuestion,
 } from '@/lib/onboarding/config'
-import { getLatestSession } from '@/lib/onboarding/session'
+import { getOrCreateSession } from '@/lib/onboarding/session'
 import { getUserIdFromCookies } from '@/lib/session/userCookie'
 
 type Props = {
@@ -21,7 +21,7 @@ export default async function OnboardingBranchPage({
   const branchId = params.branch
   const cookieStore = await cookies()
   const userId = getUserIdFromCookies(cookieStore)
-  const session = userId ? await getLatestSession(userId) : null
+  const session = userId ? await getOrCreateSession(userId) : null
   const answers = session?.answers_json ?? null
 
   const questionId =

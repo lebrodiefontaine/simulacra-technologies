@@ -1,7 +1,19 @@
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 import styles from '@/app/page.module.css'
 import ImagePreferenceGrid from '@/components/ImagePreferenceGrid'
+import { getLatestSession } from '@/lib/onboarding/session'
+import { getUserIdFromCookies } from '@/lib/session/userCookie'
 
-export default function OnboardingImagesPage() {
+export default async function OnboardingImagesPage() {
+  const cookieStore = await cookies()
+  const userId = getUserIdFromCookies(cookieStore)
+  const session = userId ? await getLatestSession(userId) : null
+
+  if (!session) {
+    redirect('/onboarding/start')
+  }
+
   return (
     <div className={styles.page}>
       <main className={styles.main}>

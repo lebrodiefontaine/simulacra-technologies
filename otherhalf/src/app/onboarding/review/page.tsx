@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 import styles from '@/app/page.module.css'
 import CompleteOnboardingButton from '@/components/CompleteOnboardingButton'
 import { getLatestSession } from '@/lib/onboarding/session'
@@ -8,6 +9,9 @@ export default async function OnboardingReviewPage() {
   const cookieStore = await cookies()
   const userId = getUserIdFromCookies(cookieStore)
   const session = userId ? await getLatestSession(userId) : null
+  if (!session) {
+    redirect('/onboarding/start')
+  }
   const answers = session?.answers_json ?? {}
 
   return (
