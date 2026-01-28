@@ -1,13 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
-import type { ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies'
 
 const COOKIE_NAME = 'otherhalf_uid'
 
+type CookieReader = {
+  get: (name: string) => { value: string } | undefined
+}
+
 export const getUserIdFromCookies = (
-  cookies: ReadonlyRequestCookies,
+  cookies: CookieReader,
 ): string | null => {
   const value = cookies.get(COOKIE_NAME)?.value
   return value ?? null
+}
+
+const generateUserId = () => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID()
+  }
+  return `uid_${Math.random().toString(36).slice(2, 10)}${Date.now().toString(36)}`
 }
 
 export const ensureUserIdCookie = (
@@ -18,7 +28,7 @@ export const ensureUserIdCookie = (
   if (existing) {
     return existing
   }
-  const userId = crypto.randomUUID()
+  const userId = generateUserId()
   res.cookies.set(COOKIE_NAME, userId, {
     httpOnly: true,
     sameSite: 'lax',
