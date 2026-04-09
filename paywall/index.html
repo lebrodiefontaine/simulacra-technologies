@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>paywall — simulacra technologies 乙</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>simulacra technologies 乙</h1>
+        <nav aria-label="primary">
+          <a href="/areas.html">areas</a>
+          <a href="/onboarding.html">onboarding</a>
+          <a href="/about.html">about</a>
+        </nav>
+      </header>
+
+      <h2 class="section-title">paywall</h2>
+      <p class="onboarding-intro">continue to secure access.</p>
+
+      <button class="ghost-button" id="checkout-button" type="button">
+        continue
+      </button>
+      <p class="form-note" id="paywall-status"></p>
+    </main>
+
+    <script>
+      const sessionId = localStorage.getItem("otherhalf_session_id");
+      const paywallStatus = document.getElementById("paywall-status");
+      const checkoutButton = document.getElementById("checkout-button");
+
+      async function ensureCompleted() {
+        const response = await fetch("/api/onboarding/session");
+        const data = await response.json();
+        if (!data.session || data.session.status !== "completed") {
+          window.location.href = "/onboarding/start";
+        }
+      }
+
+      async function startCheckout() {
+        paywallStatus.textContent = "starting checkout...";
+        try {
+          const response = await fetch("/api/stripe/create-checkout-session", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ session_id: sessionId }),
+          });
+          const data = await response.json();
+          if (!response.ok || !data.url) {
+            throw new Error("checkout failed");
+          }
+          window.location.href = data.url;
+        } catch (error) {
+          paywallStatus.textContent = "unable to start checkout.";
+        }
+      }
+
+      checkoutButton.addEventListener("click", startCheckout);
+      ensureCompleted();
+    </script>
+  </body>
+</html>

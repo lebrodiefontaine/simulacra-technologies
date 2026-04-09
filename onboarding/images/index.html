@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>image preferences — simulacra technologies 乙</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>simulacra technologies 乙</h1>
+        <nav aria-label="primary">
+          <a href="/areas.html">areas</a>
+          <a href="/onboarding.html">onboarding</a>
+          <a href="/about.html">about</a>
+        </nav>
+      </header>
+
+      <h2 class="section-title">image preferences</h2>
+      <p class="onboarding-intro">
+        mark each image with a simple like or dislike.
+      </p>
+
+      <div class="onboarding-form">
+        <ol class="onboarding-list" id="image-list"></ol>
+        <p class="form-note" id="image-status"></p>
+        <button class="ghost-button" id="review-button" type="button" disabled>
+          continue to review
+        </button>
+      </div>
+    </main>
+
+    <script>
+      const sessionId = localStorage.getItem("otherhalf_session_id");
+      if (!sessionId) {
+        window.location.href = "/onboarding/start";
+      }
+
+      const images = [
+        {
+          id: "img-01",
+          url: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=800&q=80",
+        },
+        {
+          id: "img-02",
+          url: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80",
+        },
+        {
+          id: "img-03",
+          url: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=800&q=80",
+        },
+        {
+          id: "img-04",
+          url: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80",
+        },
+        {
+          id: "img-05",
+          url: "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=800&q=80",
+        },
+        {
+          id: "img-06",
+          url: "https://images.unsplash.com/photo-1470770903676-69b98201ea1c?auto=format&fit=crop&w=800&q=80",
+        },
+        {
+          id: "img-07",
+          url: "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=800&q=80",
+        },
+        {
+          id: "img-08",
+          url: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=800&q=80",
+        },
+        {
+          id: "img-09",
+          url: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=800&q=80",
+        },
+        {
+          id: "img-10",
+          url: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80",
+        }
+      ];
+
+      const imageList = document.getElementById("image-list");
+      const imageStatus = document.getElementById("image-status");
+      const reviewButton = document.getElementById("review-button");
+
+      const responses = new Map();
+
+      function updateStatus() {
+        imageStatus.textContent = `${responses.size} of ${images.length} recorded.`;
+        reviewButton.disabled = responses.size !== images.length;
+      }
+
+      async function savePreference(imageId, liked) {
+        await fetch("/api/onboarding/images", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            session_id: sessionId,
+            image_id: imageId,
+            liked,
+          }),
+        });
+      }
+
+      images.forEach((image) => {
+        const item = document.createElement("li");
+        const label = document.createElement("label");
+        label.textContent = "image";
+
+        const img = document.createElement("img");
+        img.src = image.url;
+        img.alt = "placeholder";
+        img.loading = "lazy";
+
+        const likeButton = document.createElement("button");
+        likeButton.className = "ghost-button";
+        likeButton.type = "button";
+        likeButton.textContent = "like";
+
+        const dislikeButton = document.createElement("button");
+        dislikeButton.className = "ghost-button";
+        dislikeButton.type = "button";
+        dislikeButton.textContent = "dislike";
+
+        likeButton.addEventListener("click", async () => {
+          responses.set(image.id, true);
+          await savePreference(image.id, true);
+          updateStatus();
+        });
+
+        dislikeButton.addEventListener("click", async () => {
+          responses.set(image.id, false);
+          await savePreference(image.id, false);
+          updateStatus();
+        });
+
+        item.appendChild(label);
+        item.appendChild(img);
+        item.appendChild(likeButton);
+        item.appendChild(dislikeButton);
+        imageList.appendChild(item);
+      });
+
+      reviewButton.addEventListener("click", async () => {
+        await fetch("/api/onboarding/complete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ session_id: sessionId }),
+        });
+        window.location.href = "/onboarding/review";
+      });
+
+      updateStatus();
+    </script>
+  </body>
+</html>

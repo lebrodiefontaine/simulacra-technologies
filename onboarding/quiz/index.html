@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>onboarding quiz — simulacra technologies 乙</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>simulacra technologies 乙</h1>
+        <nav aria-label="primary">
+          <a href="/areas.html">areas</a>
+          <a href="/onboarding.html">onboarding</a>
+          <a href="/about.html">about</a>
+        </nav>
+      </header>
+
+      <h2 class="section-title">onboarding quiz</h2>
+      <p class="onboarding-intro">
+        select the closest response. this is intentionally brief.
+      </p>
+
+      <form class="onboarding-form" id="quiz-form">
+        <ol class="onboarding-list">
+          <li>
+            <label id="question-text"></label>
+            <div class="scale-options" id="options"></div>
+          </li>
+        </ol>
+        <p class="form-note" id="quiz-status"></p>
+        <button class="ghost-button" id="next-button" type="submit">
+          next
+        </button>
+      </form>
+    </main>
+
+    <script>
+      const quizStatus = document.getElementById("quiz-status");
+      const questionText = document.getElementById("question-text");
+      const optionsWrap = document.getElementById("options");
+      const quizForm = document.getElementById("quiz-form");
+
+      const sessionId = localStorage.getItem("otherhalf_session_id");
+      if (!sessionId) {
+        window.location.href = "/onboarding/start";
+      }
+
+      let config = null;
+      let currentQuestion = null;
+
+      function getQuestionIdFromPath() {
+        const parts = window.location.pathname.split("/").filter(Boolean);
+        const quizIndex = parts.indexOf("quiz");
+        if (quizIndex >= 0 && parts.length > quizIndex + 1) {
+          return parts[quizIndex + 1];
+        }
+        const params = new URLSearchParams(window.location.search);
+        return params.get("q");
+      }
+
+      function resolveNext(question, answer) {
+        if (!question.next) return null;
+        if (typeof question.next === "string") return question.next;
+        const matches = (question.next.when || []).find(
+          (rule) => rule.equals === answer
+        );
+        if (matches) return matches.goto;
+        return question.next.default || null;
+      }
+
+      function renderQuestion(question) {
+        currentQuestion = question;
+        questionText.textContent = question.prompt;
+        optionsWrap.innerHTML = "";
+        question.options.forEach((option, index) => {
+          const input = document.createElement("input");
+          input.type = "radio";
+          input.name = "answer";
+          input.id = `answer-${index}`;
+          input.value = option.value;
+
+          const label = document.createElement("label");
+          label.setAttribute("for", input.id);
+          label.textContent = option.label;
+
+          optionsWrap.appendChild(input);
+          optionsWrap.appendChild(label);
+        });
+      }
+
+      async function loadConfig() {
+        const response = await fetch("/config/onboarding.json");
+        config = await response.json();
+      }
+
+      async function init() {
+        await loadConfig();
+        const questionId =
+          getQuestionIdFromPath() || config.questions[0]?.id;
+        const question =
+          config.questions.find((item) => item.id === questionId) ||
+          config.questions[0];
+        renderQuestion(question);
+      }
+
+      quizForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const selected = quizForm.querySelector("input[name='answer']:checked");
+        if (!selected) {
+          quizStatus.textContent = "select an option to continue.";
+          return;
+        }
+
+        if (!currentQuestion) {
+          quizStatus.textContent = "unable to map question.";
+          return;
+        }
+
+        quizStatus.textContent = "saving...";
+
+        try {
+          const response = await fetch("/api/onboarding/answer", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              session_id: sessionId,
+              question_id: currentQuestion.id,
+              answer: selected.value,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error("save failed");
+          }
+
+          const nextId = resolveNext(currentQuestion, selected.value);
+
+          if (nextId) {
+            window.location.href = `/onboarding/quiz/${nextId}`;
+          } else {
+            window.location.href = "/onboarding/images";
+          }
+        } catch (error) {
+          quizStatus.textContent = "unable to save. retry.";
+        }
+      });
+
+      init();
+    </script>
+  </body>
+</html>

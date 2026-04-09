@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#F2F4F7" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <title>Onboarding Intake | Simulacra v1.2</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Inter", "Helvetica Neue", "Helvetica", "Arial", "sans-serif"],
+            },
+            colors: {
+              sterile: "#F2F4F7",
+              surface: "#F8FAFD",
+              panel: "#EEF2F6",
+              matte: "#333333",
+              medBlue: "#6B9ED9",
+              termGreen: "#48A883",
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        background: #f2f4f7;
+        color: #333;
+      }
+
+      .spin-ring {
+        animation: spin 5s linear infinite;
+      }
+
+      .drift {
+        animation: drift 2.8s ease-in-out infinite;
+      }
+
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @keyframes drift {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-4px);
+        }
+      }
+    </style>
+  </head>
+  <body class="font-sans antialiased tracking-tight">
+    <div id="root"></div>
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script type="text/babel">
+      const { useEffect, useState } = React;
+
+      function OnboardingStart() {
+        const [form, setForm] = useState({
+          firstName: "",
+          email: "",
+          intent: "",
+        });
+        const [status, setStatus] = useState("");
+        const [pending, setPending] = useState(false);
+
+        useEffect(() => {
+          if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("/service-worker.js").catch(() => {});
+          }
+        }, []);
+
+        const updateField = (field) => (event) => {
+          setForm((prev) => ({ ...prev, [field]: event.target.value }));
+        };
+
+        const canContinue = form.firstName.trim() && form.email.trim() && form.intent.trim();
+
+        const startSession = async (event) => {
+          event.preventDefault();
+          if (!canContinue || pending) return;
+          setPending(true);
+          setStatus("Initializing secure onboarding channel...");
+          try {
+            await fetch("/api/session", { method: "GET" });
+            const response = await fetch("/api/onboarding/start", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                source: "onboarding-start",
+                profile: form,
+              }),
+            });
+            const data = await response.json();
+            if (!response.ok) {
+              throw new Error(data.error || "Failed to initialize session");
+            }
+            localStorage.setItem("otherhalf_session_id", data.session_id);
+            localStorage.setItem("simulacra_profile", JSON.stringify(form));
+            window.location.href = "/onboarding/quiz";
+          } catch (error) {
+            setStatus("Connection interrupted. Please retry.");
+            setPending(false);
+          }
+        };
+
+        return (
+          <main className="mx-auto min-h-screen w-full max-w-md px-5 pb-8 pt-8 md:grid md:max-w-5xl md:grid-cols-[0.95fr_1.1fr] md:gap-8 md:px-8 md:pt-12">
+            <section className="mb-8 rounded-[2rem] bg-surface p-6 shadow-[0_30px_80px_rgba(96,112,132,0.16),inset_0_2px_0_rgba(255,255,255,0.9),inset_0_-10px_20px_rgba(129,146,168,0.18)] md:mb-0 md:p-8">
+              <div className="drift mx-auto mb-6 h-36 w-36 rounded-full bg-[conic-gradient(from_210deg_at_50%_50%,#d3e3fa_8%,#6b9ed9_62%,#edf2f9_95%)] p-[10px] shadow-[0_24px_52px_rgba(88,108,134,0.2)]">
+                <div className="relative flex h-full w-full items-center justify-center rounded-full bg-surface shadow-[inset_0_2px_8px_rgba(255,255,255,0.95),inset_0_-12px_24px_rgba(114,132,157,0.2)]">
+                  <div className="spin-ring absolute inset-2 rounded-full border border-[#9fc0e8]/50 border-t-[#5f8fcc]"></div>
+                  <span className="text-sm font-semibold uppercase tracking-[0.16em] text-medBlue">Calibrate</span>
+                </div>
+              </div>
+
+              <p className="text-xs uppercase tracking-[0.17em] text-[#738198]">Step 01</p>
+              <h1 className="mt-3 text-2xl font-semibold leading-tight text-matte md:text-3xl">
+                Onboarding intake
+              </h1>
+              <p className="mt-4 text-sm leading-relaxed text-[#495769]">
+                Enter your baseline profile details. This unlocks the adaptive question flow and tunes
+                response weighting for mobile and desktop interaction contexts.
+              </p>
+
+              <div className="mt-6 rounded-3xl bg-panel p-4 shadow-[inset_0_2px_4px_rgba(255,255,255,0.8),inset_0_-10px_16px_rgba(122,139,162,0.18)]">
+                <p className="text-xs uppercase tracking-[0.13em] text-[#5f6f84]">Status</p>
+                <div className="mt-3 flex items-center gap-3">
+                  <span className="h-3 w-3 rounded-full bg-termGreen shadow-[0_0_0_5px_rgba(72,168,131,0.18),0_0_12px_rgba(72,168,131,0.6)]"></span>
+                  <p className="text-sm text-[#3f4d60]">{status || "System nominal. Awaiting profile input."}</p>
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-[2rem] bg-surface p-6 shadow-[0_30px_80px_rgba(96,112,132,0.16),inset_0_2px_0_rgba(255,255,255,0.9),inset_0_-10px_20px_rgba(129,146,168,0.18)] md:p-8">
+              <form onSubmit={startSession} className="space-y-4">
+                <label className="block">
+                  <span className="mb-2 block text-xs uppercase tracking-[0.14em] text-[#5b6a7f]">First Name</span>
+                  <input
+                    value={form.firstName}
+                    onChange={updateField("firstName")}
+                    required
+                    placeholder="Enter your first name"
+                    className="w-full rounded-3xl bg-panel px-4 py-3 text-sm text-matte placeholder:text-[#8a95a4] shadow-[inset_0_2px_5px_rgba(255,255,255,0.85),inset_0_-7px_12px_rgba(122,139,163,0.18)] outline-none transition duration-500 focus:shadow-[0_0_0_6px_rgba(107,158,217,0.12),inset_0_2px_5px_rgba(255,255,255,0.85)]"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="mb-2 block text-xs uppercase tracking-[0.14em] text-[#5b6a7f]">Email</span>
+                  <input
+                    value={form.email}
+                    onChange={updateField("email")}
+                    required
+                    type="email"
+                    placeholder="Enter your email"
+                    className="w-full rounded-3xl bg-panel px-4 py-3 text-sm text-matte placeholder:text-[#8a95a4] shadow-[inset_0_2px_5px_rgba(255,255,255,0.85),inset_0_-7px_12px_rgba(122,139,163,0.18)] outline-none transition duration-500 focus:shadow-[0_0_0_6px_rgba(107,158,217,0.12),inset_0_2px_5px_rgba(255,255,255,0.85)]"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="mb-2 block text-xs uppercase tracking-[0.14em] text-[#5b6a7f]">Primary Intent</span>
+                  <textarea
+                    value={form.intent}
+                    onChange={updateField("intent")}
+                    required
+                    rows="4"
+                    placeholder="Tell us what you want from your companion."
+                    className="w-full resize-none rounded-3xl bg-panel px-4 py-3 text-sm text-matte placeholder:text-[#8a95a4] shadow-[inset_0_2px_5px_rgba(255,255,255,0.85),inset_0_-7px_12px_rgba(122,139,163,0.18)] outline-none transition duration-500 focus:shadow-[0_0_0_6px_rgba(107,158,217,0.12),inset_0_2px_5px_rgba(255,255,255,0.85)]"
+                  ></textarea>
+                </label>
+
+                <button
+                  type="submit"
+                  disabled={!canContinue || pending}
+                  className="relative mt-2 inline-flex w-full items-center justify-center rounded-3xl bg-[linear-gradient(145deg,#f8fbff_0%,#dde5ee_100%)] px-5 py-3 text-sm font-semibold text-matte shadow-[0_14px_28px_rgba(95,111,132,0.22),inset_0_2px_3px_rgba(255,255,255,0.95),inset_0_-6px_10px_rgba(100,117,140,0.2)] transition-all duration-500 enabled:hover:-translate-y-0.5 enabled:hover:shadow-[0_18px_32px_rgba(95,111,132,0.24),inset_0_2px_4px_rgba(255,255,255,0.95),inset_0_-8px_12px_rgba(100,117,140,0.24)] enabled:active:translate-y-0.5 enabled:active:shadow-[inset_0_4px_8px_rgba(104,121,143,0.35),0_6px_16px_rgba(95,111,132,0.2)] disabled:cursor-not-allowed disabled:opacity-45"
+                >
+                  {pending ? "Starting..." : "Continue to Calibration"}
+                  <span className="pointer-events-none absolute inset-0 rounded-3xl shadow-[0_0_0_1px_rgba(182,194,209,0.8),0_0_0_6px_rgba(255,255,255,0.38)]"></span>
+                </button>
+              </form>
+
+              <nav
+                aria-label="Bottom navigation"
+                className="mx-auto mt-7 flex w-full max-w-sm items-center justify-between rounded-[2rem] bg-surface px-4 py-3 shadow-[0_22px_60px_rgba(95,112,132,0.2),inset_0_2px_0_rgba(255,255,255,0.9),inset_0_-9px_18px_rgba(128,145,168,0.2)] md:mx-0"
+              >
+                <a
+                  href="/"
+                  className="flex min-w-[90px] flex-col items-center gap-1 rounded-3xl px-3 py-2 text-[#6a778c] transition duration-500 hover:text-matte"
+                >
+                  <span className="text-xs">Home</span>
+                </a>
+                <a
+                  href="/onboarding/start/"
+                  className="flex min-w-[90px] flex-col items-center gap-1 rounded-3xl px-3 py-2 text-matte shadow-[inset_0_2px_4px_rgba(255,255,255,0.86),inset_0_-10px_14px_rgba(126,143,166,0.22)] transition duration-500"
+                >
+                  <span className="text-xs font-semibold">Onboarding</span>
+                </a>
+                <a
+                  href="/about.html"
+                  className="flex min-w-[90px] flex-col items-center gap-1 rounded-3xl px-3 py-2 text-[#6a778c] transition duration-500 hover:text-matte"
+                >
+                  <span className="text-xs">Feedback</span>
+                </a>
+              </nav>
+            </section>
+          </main>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById("root")).render(<OnboardingStart />);
+    </script>
+  </body>
+</html>

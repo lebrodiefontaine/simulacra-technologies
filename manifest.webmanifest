@@ -1,0 +1,10 @@
+{
+  "name": "Simulacra Hyperpersonalized Companion",
+  "short_name": "Simulacra",
+  "description": "Clinical-neumorphic onboarding interface for Simulacra v1.2.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F2F4F7",
+  "theme_color": "#F2F4F7",
+  "orientation": "portrait-primary"
+}

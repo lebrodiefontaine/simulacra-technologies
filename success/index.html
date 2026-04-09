@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>success — simulacra technologies 乙</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>simulacra technologies 乙</h1>
+        <nav aria-label="primary">
+          <a href="/areas.html">areas</a>
+          <a href="/onboarding.html">onboarding</a>
+          <a href="/about.html">about</a>
+        </nav>
+      </header>
+
+      <h2 class="section-title">success</h2>
+      <p class="onboarding-intro" id="status-text">checking payment status...</p>
+      <p class="form-note">
+        <a href="/success" id="refresh-link">refresh status</a>
+      </p>
+    </main>
+
+    <script>
+      const statusText = document.getElementById("status-text");
+
+      async function checkStatus() {
+        try {
+          const response = await fetch("/api/subscription/status");
+          const data = await response.json();
+          if (data.active) {
+            statusText.textContent = "payment confirmed.";
+          } else {
+            statusText.textContent = "pending. refresh in a moment.";
+          }
+        } catch (error) {
+          statusText.textContent = "unable to confirm payment.";
+        }
+      }
+
+      checkStatus();
+    </script>
+  </body>
+</html>

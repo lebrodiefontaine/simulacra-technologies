@@ -1,0 +1,35 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "**/*",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/onboarding/quiz/(.*)",
+      "dest": "/onboarding/quiz/index.html"
+    },
+    {
+      "src": "/onboarding/(start|images|review)",
+      "dest": "/onboarding/$1/index.html"
+    },
+    {
+      "src": "/paywall",
+      "dest": "/paywall/index.html"
+    },
+    {
+      "src": "/success",
+      "dest": "/success/index.html"
+    },
+    {
+      "src": "/cancel",
+      "dest": "/cancel/index.html"
+    }
+  ]
+}
