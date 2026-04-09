@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#F2F4F7" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <title>Onboarding Intake | Simulacra v1.2</title>
+    <title>Onboarding Sequence | Simulacra v1.2</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -38,12 +38,12 @@
         color: #333;
       }
 
-      .spin-ring {
-        animation: spin 5s linear infinite;
+      .soft-spin {
+        animation: spin 6.5s linear infinite;
       }
 
-      .drift {
-        animation: drift 2.8s ease-in-out infinite;
+      .slide-enter {
+        animation: slideIn 0.52s cubic-bezier(0.22, 1, 0.36, 1);
       }
 
       @keyframes spin {
@@ -55,13 +55,14 @@
         }
       }
 
-      @keyframes drift {
-        0%,
-        100% {
-          transform: translateY(0);
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateX(24px) scale(0.98);
         }
-        50% {
-          transform: translateY(-4px);
+        to {
+          opacity: 1;
+          transform: translateX(0) scale(1);
         }
       }
     </style>
@@ -76,12 +77,132 @@
       const { useEffect, useState } = React;
 
       function OnboardingStart() {
+        const slides = [
+          {
+            id: "intro",
+            type: "intro",
+            step: "01",
+            title: "Welcome to Simulacra",
+            body: "Simulacra is a state-of-the-art hyperpersonalized chatbot which creates the ideal personal intimate companion customized to match user preference, persona, and taste.",
+          },
+          {
+            id: "capabilities",
+            type: "intro",
+            step: "02",
+            title: "Adaptive intelligence stack",
+            body: "Your companion model calibrates language cadence, emotional pacing, memory depth, and style controls to align with your preferred relational experience.",
+          },
+          {
+            id: "outcome",
+            type: "intro",
+            step: "03",
+            title: "Result after onboarding",
+            body: "The end result is an artificially intelligent companion created to match you across communication patterns, personality fit, and intimate preference boundaries.",
+          },
+          {
+            id: "profile",
+            type: "form",
+            step: "04",
+            title: "Profile baseline",
+            description: "Start with identity and contact details.",
+            field: "firstName",
+            label: "First Name",
+            placeholder: "Enter your first name",
+            inputType: "text",
+          },
+          {
+            id: "email",
+            type: "form",
+            step: "05",
+            title: "Session address",
+            description: "Provide an email for account continuity.",
+            field: "email",
+            label: "Email",
+            placeholder: "Enter your email",
+            inputType: "email",
+          },
+          {
+            id: "mbti-axis",
+            type: "choice",
+            step: "06",
+            title: "MBTI-style orientation",
+            description: "What feels most natural in close conversation?",
+            field: "mbtiAxis",
+            options: [
+              "Extraverted energy and active verbal processing",
+              "Introverted processing and reflective pacing",
+              "Balanced context switching between both",
+            ],
+          },
+          {
+            id: "romantic-style",
+            type: "choice",
+            step: "07",
+            title: "Romantic communication style",
+            description: "How should your companion express affection?",
+            field: "romanticStyle",
+            options: [
+              "Warm, direct, and verbally expressive",
+              "Slow-burn, subtle, and emotionally layered",
+              "Playful and spontaneous with light teasing",
+            ],
+          },
+          {
+            id: "intimacy-boundary",
+            type: "choice",
+            step: "08",
+            title: "Intimacy boundary preference",
+            description: "Select your preferred tone boundary for intimate topics.",
+            field: "intimacyBoundary",
+            options: [
+              "Soft emotional intimacy only",
+              "Moderate flirtation with clear consent framing",
+              "Deep, immersive romantic intensity",
+            ],
+          },
+          {
+            id: "attachment-preference",
+            type: "choice",
+            step: "09",
+            title: "Attachment and reassurance",
+            description: "How often should the companion proactively check in?",
+            field: "attachmentPreference",
+            options: [
+              "Frequent reassurance and proactive care",
+              "Periodic check-ins with space respected",
+              "Mostly user-initiated, low-pressure presence",
+            ],
+          },
+          {
+            id: "intent",
+            type: "textarea",
+            step: "10",
+            title: "Personal intent statement",
+            description: "Describe what you want from your companion dynamic.",
+            field: "intent",
+            label: "Primary Intent",
+            placeholder: "Share your emotional, romantic, and personal goals.",
+          },
+          {
+            id: "complete",
+            type: "complete",
+            step: "11",
+            title: "Inventory framework complete",
+            body: "Your personality inventory framework is initialized. Continue to adaptive calibration questions to finalize your custom companion profile.",
+          },
+        ];
+
+        const [currentIndex, setCurrentIndex] = useState(0);
         const [form, setForm] = useState({
           firstName: "",
           email: "",
+          mbtiAxis: "",
+          romanticStyle: "",
+          intimacyBoundary: "",
+          attachmentPreference: "",
           intent: "",
         });
-        const [status, setStatus] = useState("");
+        const [status, setStatus] = useState("System nominal. Slide sequence ready.");
         const [pending, setPending] = useState(false);
 
         useEffect(() => {
@@ -94,11 +215,29 @@
           setForm((prev) => ({ ...prev, [field]: event.target.value }));
         };
 
-        const canContinue = form.firstName.trim() && form.email.trim() && form.intent.trim();
+        const activeSlide = slides[currentIndex];
+        const progressPct = Math.round(((currentIndex + 1) / slides.length) * 100);
+
+        const slideIsValid = (slide) => {
+          if (slide.type === "intro" || slide.type === "complete") return true;
+          const value = form[slide.field];
+          return typeof value === "string" ? value.trim().length > 0 : Boolean(value);
+        };
+
+        const nextSlide = () => {
+          if (!slideIsValid(activeSlide) || pending) return;
+          setCurrentIndex((prev) => Math.min(prev + 1, slides.length - 1));
+          setStatus("Slide advanced. Collecting personality signals.");
+        };
+
+        const prevSlide = () => {
+          setCurrentIndex((prev) => Math.max(prev - 1, 0));
+          setStatus("Moved to previous card.");
+        };
 
         const startSession = async (event) => {
           event.preventDefault();
-          if (!canContinue || pending) return;
+          if (pending) return;
           setPending(true);
           setStatus("Initializing secure onboarding channel...");
           try {
@@ -124,79 +263,172 @@
           }
         };
 
-        return (
-          <main className="mx-auto min-h-screen w-full max-w-md px-5 pb-8 pt-8 md:grid md:max-w-5xl md:grid-cols-[0.95fr_1.1fr] md:gap-8 md:px-8 md:pt-12">
-            <section className="mb-8 rounded-[2rem] bg-surface p-6 shadow-[0_30px_80px_rgba(96,112,132,0.16),inset_0_2px_0_rgba(255,255,255,0.9),inset_0_-10px_20px_rgba(129,146,168,0.18)] md:mb-0 md:p-8">
-              <div className="drift mx-auto mb-6 h-36 w-36 rounded-full bg-[conic-gradient(from_210deg_at_50%_50%,#d3e3fa_8%,#6b9ed9_62%,#edf2f9_95%)] p-[10px] shadow-[0_24px_52px_rgba(88,108,134,0.2)]">
-                <div className="relative flex h-full w-full items-center justify-center rounded-full bg-surface shadow-[inset_0_2px_8px_rgba(255,255,255,0.95),inset_0_-12px_24px_rgba(114,132,157,0.2)]">
-                  <div className="spin-ring absolute inset-2 rounded-full border border-[#9fc0e8]/50 border-t-[#5f8fcc]"></div>
-                  <span className="text-sm font-semibold uppercase tracking-[0.16em] text-medBlue">Calibrate</span>
-                </div>
-              </div>
+        const renderSlideContent = () => {
+          if (activeSlide.type === "intro") {
+            return (
+              <>
+                <p className="text-xs uppercase tracking-[0.16em] text-[#6d7d93]">
+                  Slide {activeSlide.step} of {String(slides.length).padStart(2, "0")}
+                </p>
+                <h1 className="mt-3 text-2xl font-semibold leading-tight text-matte md:text-3xl">{activeSlide.title}</h1>
+                <p className="mt-4 text-sm leading-relaxed text-[#4c5b6f] md:text-base">{activeSlide.body}</p>
+              </>
+            );
+          }
 
-              <p className="text-xs uppercase tracking-[0.17em] text-[#738198]">Step 01</p>
-              <h1 className="mt-3 text-2xl font-semibold leading-tight text-matte md:text-3xl">
-                Onboarding intake
-              </h1>
-              <p className="mt-4 text-sm leading-relaxed text-[#495769]">
-                Enter your baseline profile details. This unlocks the adaptive question flow and tunes
-                response weighting for mobile and desktop interaction contexts.
-              </p>
-
-              <div className="mt-6 rounded-3xl bg-panel p-4 shadow-[inset_0_2px_4px_rgba(255,255,255,0.8),inset_0_-10px_16px_rgba(122,139,162,0.18)]">
-                <p className="text-xs uppercase tracking-[0.13em] text-[#5f6f84]">Status</p>
-                <div className="mt-3 flex items-center gap-3">
-                  <span className="h-3 w-3 rounded-full bg-termGreen shadow-[0_0_0_5px_rgba(72,168,131,0.18),0_0_12px_rgba(72,168,131,0.6)]"></span>
-                  <p className="text-sm text-[#3f4d60]">{status || "System nominal. Awaiting profile input."}</p>
-                </div>
-              </div>
-            </section>
-
-            <section className="rounded-[2rem] bg-surface p-6 shadow-[0_30px_80px_rgba(96,112,132,0.16),inset_0_2px_0_rgba(255,255,255,0.9),inset_0_-10px_20px_rgba(129,146,168,0.18)] md:p-8">
-              <form onSubmit={startSession} className="space-y-4">
-                <label className="block">
-                  <span className="mb-2 block text-xs uppercase tracking-[0.14em] text-[#5b6a7f]">First Name</span>
+          if (activeSlide.type === "form") {
+            return (
+              <>
+                <p className="text-xs uppercase tracking-[0.16em] text-[#6d7d93]">
+                  Slide {activeSlide.step} of {String(slides.length).padStart(2, "0")}
+                </p>
+                <h1 className="mt-3 text-2xl font-semibold leading-tight text-matte md:text-3xl">{activeSlide.title}</h1>
+                <p className="mt-3 text-sm leading-relaxed text-[#4c5b6f]">{activeSlide.description}</p>
+                <label className="mt-5 block">
+                  <span className="mb-2 block text-xs uppercase tracking-[0.14em] text-[#5b6a7f]">{activeSlide.label}</span>
                   <input
-                    value={form.firstName}
-                    onChange={updateField("firstName")}
+                    value={form[activeSlide.field]}
+                    onChange={updateField(activeSlide.field)}
                     required
-                    placeholder="Enter your first name"
+                    type={activeSlide.inputType}
+                    placeholder={activeSlide.placeholder}
                     className="w-full rounded-3xl bg-panel px-4 py-3 text-sm text-matte placeholder:text-[#8a95a4] shadow-[inset_0_2px_5px_rgba(255,255,255,0.85),inset_0_-7px_12px_rgba(122,139,163,0.18)] outline-none transition duration-500 focus:shadow-[0_0_0_6px_rgba(107,158,217,0.12),inset_0_2px_5px_rgba(255,255,255,0.85)]"
                   />
                 </label>
+              </>
+            );
+          }
 
-                <label className="block">
-                  <span className="mb-2 block text-xs uppercase tracking-[0.14em] text-[#5b6a7f]">Email</span>
-                  <input
-                    value={form.email}
-                    onChange={updateField("email")}
-                    required
-                    type="email"
-                    placeholder="Enter your email"
-                    className="w-full rounded-3xl bg-panel px-4 py-3 text-sm text-matte placeholder:text-[#8a95a4] shadow-[inset_0_2px_5px_rgba(255,255,255,0.85),inset_0_-7px_12px_rgba(122,139,163,0.18)] outline-none transition duration-500 focus:shadow-[0_0_0_6px_rgba(107,158,217,0.12),inset_0_2px_5px_rgba(255,255,255,0.85)]"
-                  />
-                </label>
-
-                <label className="block">
-                  <span className="mb-2 block text-xs uppercase tracking-[0.14em] text-[#5b6a7f]">Primary Intent</span>
+          if (activeSlide.type === "textarea") {
+            return (
+              <>
+                <p className="text-xs uppercase tracking-[0.16em] text-[#6d7d93]">
+                  Slide {activeSlide.step} of {String(slides.length).padStart(2, "0")}
+                </p>
+                <h1 className="mt-3 text-2xl font-semibold leading-tight text-matte md:text-3xl">{activeSlide.title}</h1>
+                <p className="mt-3 text-sm leading-relaxed text-[#4c5b6f]">{activeSlide.description}</p>
+                <label className="mt-5 block">
+                  <span className="mb-2 block text-xs uppercase tracking-[0.14em] text-[#5b6a7f]">{activeSlide.label}</span>
                   <textarea
-                    value={form.intent}
-                    onChange={updateField("intent")}
+                    value={form[activeSlide.field]}
+                    onChange={updateField(activeSlide.field)}
                     required
-                    rows="4"
-                    placeholder="Tell us what you want from your companion."
+                    rows="5"
+                    placeholder={activeSlide.placeholder}
                     className="w-full resize-none rounded-3xl bg-panel px-4 py-3 text-sm text-matte placeholder:text-[#8a95a4] shadow-[inset_0_2px_5px_rgba(255,255,255,0.85),inset_0_-7px_12px_rgba(122,139,163,0.18)] outline-none transition duration-500 focus:shadow-[0_0_0_6px_rgba(107,158,217,0.12),inset_0_2px_5px_rgba(255,255,255,0.85)]"
                   ></textarea>
                 </label>
+              </>
+            );
+          }
 
-                <button
-                  type="submit"
-                  disabled={!canContinue || pending}
-                  className="relative mt-2 inline-flex w-full items-center justify-center rounded-3xl bg-[linear-gradient(145deg,#f8fbff_0%,#dde5ee_100%)] px-5 py-3 text-sm font-semibold text-matte shadow-[0_14px_28px_rgba(95,111,132,0.22),inset_0_2px_3px_rgba(255,255,255,0.95),inset_0_-6px_10px_rgba(100,117,140,0.2)] transition-all duration-500 enabled:hover:-translate-y-0.5 enabled:hover:shadow-[0_18px_32px_rgba(95,111,132,0.24),inset_0_2px_4px_rgba(255,255,255,0.95),inset_0_-8px_12px_rgba(100,117,140,0.24)] enabled:active:translate-y-0.5 enabled:active:shadow-[inset_0_4px_8px_rgba(104,121,143,0.35),0_6px_16px_rgba(95,111,132,0.2)] disabled:cursor-not-allowed disabled:opacity-45"
-                >
-                  {pending ? "Starting..." : "Continue to Calibration"}
-                  <span className="pointer-events-none absolute inset-0 rounded-3xl shadow-[0_0_0_1px_rgba(182,194,209,0.8),0_0_0_6px_rgba(255,255,255,0.38)]"></span>
-                </button>
+          if (activeSlide.type === "choice") {
+            return (
+              <>
+                <p className="text-xs uppercase tracking-[0.16em] text-[#6d7d93]">
+                  Slide {activeSlide.step} of {String(slides.length).padStart(2, "0")}
+                </p>
+                <h1 className="mt-3 text-2xl font-semibold leading-tight text-matte md:text-3xl">{activeSlide.title}</h1>
+                <p className="mt-3 text-sm leading-relaxed text-[#4c5b6f]">{activeSlide.description}</p>
+                <div className="mt-5 grid gap-3">
+                  {activeSlide.options.map((option) => {
+                    const selected = form[activeSlide.field] === option;
+                    return (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => {
+                          setForm((prev) => ({ ...prev, [activeSlide.field]: option }));
+                          setStatus("Preference logged.");
+                        }}
+                        className={`rounded-3xl px-4 py-3 text-left text-sm transition-all duration-500 ${
+                          selected
+                            ? "bg-[linear-gradient(145deg,#eff6ff_0%,#d7e4f6_100%)] text-matte shadow-[0_14px_28px_rgba(95,111,132,0.2),inset_0_2px_4px_rgba(255,255,255,0.92),inset_0_-8px_12px_rgba(95,114,139,0.2)]"
+                            : "bg-panel text-[#49596f] shadow-[inset_0_2px_4px_rgba(255,255,255,0.85),inset_0_-10px_16px_rgba(121,139,161,0.18)] hover:shadow-[0_10px_20px_rgba(98,114,134,0.14),inset_0_2px_4px_rgba(255,255,255,0.85)]"
+                        }`}
+                      >
+                        {option}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            );
+          }
+
+          return (
+            <>
+              <p className="text-xs uppercase tracking-[0.16em] text-[#6d7d93]">
+                Slide {activeSlide.step} of {String(slides.length).padStart(2, "0")}
+              </p>
+              <h1 className="mt-3 text-2xl font-semibold leading-tight text-matte md:text-3xl">{activeSlide.title}</h1>
+              <p className="mt-4 text-sm leading-relaxed text-[#4c5b6f] md:text-base">{activeSlide.body}</p>
+              <div className="mt-5 rounded-3xl bg-panel p-4 shadow-[inset_0_2px_4px_rgba(255,255,255,0.8),inset_0_-10px_16px_rgba(122,139,162,0.18)]">
+                <p className="text-xs uppercase tracking-[0.13em] text-[#5f6f84]">Inventory readiness</p>
+                <p className="mt-2 text-sm text-[#3f4d60]">All required framework fields are complete.</p>
+              </div>
+            </>
+          );
+        };
+
+        return (
+          <main className="mx-auto min-h-screen w-full max-w-md px-5 pb-8 pt-8 md:max-w-4xl md:px-8 md:pt-12">
+            <section className="mb-6 flex items-center justify-between">
+              <div className="h-24 w-24 rounded-full bg-[conic-gradient(from_210deg_at_50%_50%,#d3e3fa_8%,#6b9ed9_62%,#edf2f9_95%)] p-[8px] shadow-[0_24px_52px_rgba(88,108,134,0.2)]">
+                <div className="relative flex h-full w-full items-center justify-center rounded-full bg-surface shadow-[inset_0_2px_8px_rgba(255,255,255,0.95),inset_0_-12px_24px_rgba(114,132,157,0.2)]">
+                  <div className="soft-spin absolute inset-2 rounded-full border border-[#9fc0e8]/50 border-t-[#5f8fcc]"></div>
+                  <span className="text-sm font-semibold uppercase tracking-[0.16em] text-medBlue">Onboard</span>
+                </div>
+              </div>
+              <div className="rounded-3xl bg-surface px-4 py-3 shadow-[0_20px_44px_rgba(92,109,130,0.16),inset_0_2px_0_rgba(255,255,255,0.9),inset_0_-8px_16px_rgba(128,145,168,0.2)]">
+                <p className="text-xs uppercase tracking-[0.16em] text-[#607086]">Progress</p>
+                <p className="mt-1 text-lg font-semibold text-matte">{progressPct}%</p>
+              </div>
+            </section>
+
+            <section className="slide-enter rounded-[2rem] bg-surface p-6 shadow-[0_30px_80px_rgba(96,112,132,0.16),inset_0_2px_0_rgba(255,255,255,0.9),inset_0_-10px_20px_rgba(129,146,168,0.18)] md:p-8">
+              <form onSubmit={startSession}>
+                {renderSlideContent()}
+
+                <div className="mt-6 rounded-3xl bg-panel p-4 shadow-[inset_0_2px_4px_rgba(255,255,255,0.8),inset_0_-10px_16px_rgba(122,139,162,0.18)]">
+                  <p className="text-xs uppercase tracking-[0.13em] text-[#5f6f84]">System status</p>
+                  <div className="mt-3 flex items-center gap-3">
+                    <span className="h-3 w-3 rounded-full bg-termGreen shadow-[0_0_0_5px_rgba(72,168,131,0.18),0_0_12px_rgba(72,168,131,0.6)]"></span>
+                    <p className="text-sm text-[#3f4d60]">{status}</p>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={prevSlide}
+                    disabled={currentIndex === 0 || pending}
+                    className="inline-flex min-w-[120px] items-center justify-center rounded-3xl bg-panel px-4 py-3 text-sm font-medium text-[#5b6a7f] shadow-[inset_0_2px_4px_rgba(255,255,255,0.86),inset_0_-10px_14px_rgba(126,143,166,0.2)] transition duration-500 hover:text-matte disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Back
+                  </button>
+
+                  {currentIndex < slides.length - 1 ? (
+                    <button
+                      type="button"
+                      onClick={nextSlide}
+                      disabled={!slideIsValid(activeSlide) || pending}
+                      className="relative inline-flex w-full items-center justify-center rounded-3xl bg-[linear-gradient(145deg,#f8fbff_0%,#dde5ee_100%)] px-5 py-3 text-sm font-semibold text-matte shadow-[0_14px_28px_rgba(95,111,132,0.22),inset_0_2px_3px_rgba(255,255,255,0.95),inset_0_-6px_10px_rgba(100,117,140,0.2)] transition-all duration-500 enabled:hover:-translate-y-0.5 enabled:hover:shadow-[0_18px_32px_rgba(95,111,132,0.24),inset_0_2px_4px_rgba(255,255,255,0.95),inset_0_-8px_12px_rgba(100,117,140,0.24)] enabled:active:translate-y-0.5 enabled:active:shadow-[inset_0_4px_8px_rgba(104,121,143,0.35),0_6px_16px_rgba(95,111,132,0.2)] disabled:cursor-not-allowed disabled:opacity-45"
+                    >
+                      Next Slide
+                      <span className="pointer-events-none absolute inset-0 rounded-3xl shadow-[0_0_0_1px_rgba(182,194,209,0.8),0_0_0_6px_rgba(255,255,255,0.38)]"></span>
+                    </button>
+                  ) : (
+                    <button
+                      type="submit"
+                      disabled={pending}
+                      className="relative inline-flex w-full items-center justify-center rounded-3xl bg-[linear-gradient(145deg,#f8fbff_0%,#dde5ee_100%)] px-5 py-3 text-sm font-semibold text-matte shadow-[0_14px_28px_rgba(95,111,132,0.22),inset_0_2px_3px_rgba(255,255,255,0.95),inset_0_-6px_10px_rgba(100,117,140,0.2)] transition-all duration-500 enabled:hover:-translate-y-0.5 enabled:hover:shadow-[0_18px_32px_rgba(95,111,132,0.24),inset_0_2px_4px_rgba(255,255,255,0.95),inset_0_-8px_12px_rgba(100,117,140,0.24)] enabled:active:translate-y-0.5 enabled:active:shadow-[inset_0_4px_8px_rgba(104,121,143,0.35),0_6px_16px_rgba(95,111,132,0.2)] disabled:cursor-not-allowed disabled:opacity-45"
+                    >
+                      {pending ? "Starting..." : "Begin Adaptive Calibration"}
+                      <span className="pointer-events-none absolute inset-0 rounded-3xl shadow-[0_0_0_1px_rgba(182,194,209,0.8),0_0_0_6px_rgba(255,255,255,0.38)]"></span>
+                    </button>
+                  )}
+                </div>
               </form>
 
               <nav
