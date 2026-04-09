@@ -1,4 +1,4 @@
-const CACHE_NAME = "simulacra-v1-2";
+const CACHE_NAME = "simulacra-v1-3";
 const CORE_ASSETS = [
   "/",
   "/index.html",
@@ -34,6 +34,20 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
+
+  // Always prefer network for page navigations so fresh deploys appear immediately.
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          return response;
+        })
+        .catch(() => caches.match(event.request).then((cached) => cached || caches.match("/index.html"))),
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(event.request).then((cached) => {
