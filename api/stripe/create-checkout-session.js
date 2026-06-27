@@ -26,7 +26,14 @@ module.exports = async (req, res) => {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
   if (!stripeSecret || !priceId || !appUrl) {
-    return sendJson(res, 500, { error: "Missing Stripe configuration" });
+    return sendJson(res, 500, {
+      error: "Missing Stripe configuration",
+      missing: {
+        STRIPE_SECRET_KEY: !stripeSecret,
+        NEXT_PUBLIC_STRIPE_PRICE_ID: !priceId,
+        NEXT_PUBLIC_APP_URL: !appUrl,
+      },
+    });
   }
 
   try {
@@ -48,6 +55,12 @@ module.exports = async (req, res) => {
 
     return sendJson(res, 200, { url: session.url });
   } catch (error) {
-    return sendJson(res, 500, { error: "Failed to create checkout session" });
+    console.error("create-checkout-session failed:", error.message);
+    // Surface Stripe's actual reason to help diagnose config issues.
+    return sendJson(res, 500, {
+      error: "Failed to create checkout session",
+      detail: error.message,
+      type: error.type || null,
+    });
   }
 };
