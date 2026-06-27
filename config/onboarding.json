@@ -1,116 +1,139 @@
 {
-  "version": 1,
+  "version": 2,
+  "title": "the romantic type index",
+  "intro": "twelve questions. there are no wrong answers — only the shape of how you love. your answers compose your other half.",
   "questions": [
     {
-      "id": "focus",
-      "prompt": "what best describes your current focus?",
+      "id": "pace_1",
+      "prompt": "when something could begin, you...",
       "type": "single",
+      "axis": "pace",
       "options": [
-        { "value": "design", "label": "design systems" },
-        { "value": "engineering", "label": "engineering systems" },
-        { "value": "strategy", "label": "strategy systems" }
+        { "value": "B", "label": "let it simmer — certain things shouldn't be rushed" },
+        { "value": "S", "label": "move toward it before the moment cools" }
       ],
-      "next": "tempo"
+      "next": "pace_2"
     },
     {
-      "id": "tempo",
-      "prompt": "do you prefer structured pace or open exploration?",
+      "id": "pace_2",
+      "prompt": "a connection feels most alive when it...",
       "type": "single",
+      "axis": "pace",
       "options": [
-        { "value": "structured", "label": "structured pace" },
-        { "value": "open", "label": "open exploration" }
+        { "value": "B", "label": "deepens slowly, layer by layer" },
+        { "value": "S", "label": "ignites fast and burns bright" }
       ],
-      "next": {
-        "when": [{ "equals": "structured", "goto": "signal" }],
-        "default": "signal"
-      }
+      "next": "pace_3"
     },
     {
-      "id": "signal",
-      "prompt": "what signal matters most to you right now?",
+      "id": "pace_3",
+      "prompt": "you trust a feeling more when it...",
       "type": "single",
+      "axis": "pace",
       "options": [
-        { "value": "clarity", "label": "clarity" },
-        { "value": "velocity", "label": "velocity" },
-        { "value": "depth", "label": "depth" }
+        { "value": "B", "label": "has survived a little time" },
+        { "value": "S", "label": "arrives like lightning" }
       ],
-      "next": "cadence"
+      "next": "expr_1"
     },
     {
-      "id": "cadence",
-      "prompt": "how often do you want to recalibrate?",
+      "id": "expr_1",
+      "prompt": "love, to you, sounds most like...",
       "type": "single",
+      "axis": "expression",
       "options": [
-        { "value": "weekly", "label": "weekly" },
-        { "value": "monthly", "label": "monthly" },
-        { "value": "quarterly", "label": "quarterly" }
+        { "value": "T", "label": "a quiet, steady tenderness" },
+        { "value": "F", "label": "a consuming, unmistakable heat" }
+      ],
+      "next": "expr_2"
+    },
+    {
+      "id": "expr_2",
+      "prompt": "you'd rather be told...",
+      "type": "single",
+      "axis": "expression",
+      "options": [
+        { "value": "T", "label": "you are safe with me" },
+        { "value": "F", "label": "i can't stop thinking about you" }
+      ],
+      "next": "expr_3"
+    },
+    {
+      "id": "expr_3",
+      "prompt": "your affection shows up as...",
+      "type": "single",
+      "axis": "expression",
+      "options": [
+        { "value": "T", "label": "small, careful acts of care" },
+        { "value": "F", "label": "bold, undeniable gestures" }
+      ],
+      "next": "close_1"
+    },
+    {
+      "id": "close_1",
+      "prompt": "the right amount of together is...",
+      "type": "single",
+      "axis": "closeness",
+      "options": [
+        { "value": "D", "label": "woven through every day" },
+        { "value": "O", "label": "intense when present, free when apart" }
+      ],
+      "next": "close_2"
+    },
+    {
+      "id": "close_2",
+      "prompt": "you feel most loved when someone...",
+      "type": "single",
+      "axis": "closeness",
+      "options": [
+        { "value": "D", "label": "chooses you again and again" },
+        { "value": "O", "label": "gives you room to be fully yourself" }
+      ],
+      "next": "close_3"
+    },
+    {
+      "id": "close_3",
+      "prompt": "distance between two people is...",
+      "type": "single",
+      "axis": "closeness",
+      "options": [
+        { "value": "D", "label": "something to close" },
+        { "value": "O", "label": "where longing keeps the fire alive" }
+      ],
+      "next": "mind_1"
+    },
+    {
+      "id": "mind_1",
+      "prompt": "you fall for...",
+      "type": "single",
+      "axis": "mind",
+      "options": [
+        { "value": "R", "label": "the story you could become together" },
+        { "value": "G", "label": "who they actually are, today" }
+      ],
+      "next": "mind_2"
+    },
+    {
+      "id": "mind_2",
+      "prompt": "a perfect night is...",
+      "type": "single",
+      "axis": "mind",
+      "options": [
+        { "value": "R", "label": "lost in talk of everything and nothing" },
+        { "value": "G", "label": "real and present, no performance" }
+      ],
+      "next": "mind_3"
+    },
+    {
+      "id": "mind_3",
+      "prompt": "you believe love is...",
+      "type": "single",
+      "axis": "mind",
+      "options": [
+        { "value": "R", "label": "a kind of beautiful madness" },
+        { "value": "G", "label": "a practice you build with your hands" }
       ],
       "next": null
     }
   ]
-}
-{
-  "branches": {
-    "default": [
-      {
-        "id": "intent",
-        "prompt": "What brings you to Otherhalf today?",
-        "type": "single",
-        "options": ["companionship", "clarity", "reinvention", "unknown"],
-        "next": {
-          "branches": {
-            "companionship": "bond"
-          },
-          "default": "signal"
-        }
-      },
-      {
-        "id": "signal",
-        "prompt": "How do you prefer to be guided?",
-        "type": "single",
-        "options": ["gentle", "direct", "experimental"],
-        "next": "tempo"
-      },
-      {
-        "id": "tempo",
-        "prompt": "What rhythm feels right?",
-        "type": "single",
-        "options": ["slow burn", "balanced", "fast sync"],
-        "next": "energy"
-      },
-      {
-        "id": "energy",
-        "prompt": "Choose a baseline energy level.",
-        "type": "scale",
-        "min": 1,
-        "max": 5,
-        "next": "presence"
-      },
-      {
-        "id": "presence",
-        "prompt": "How present should your otherhalf feel?",
-        "type": "scale",
-        "min": 1,
-        "max": 5,
-        "next": null
-      }
-    ],
-    "bond": [
-      {
-        "id": "bond_style",
-        "prompt": "Pick a bond style.",
-        "type": "single",
-        "options": ["devotional", "protective", "playful", "quiet"],
-        "next": "bond_depth"
-      },
-      {
-        "id": "bond_depth",
-        "prompt": "How deep should the bond feel?",
-        "type": "scale",
-        "min": 1,
-        "max": 5,
-        "next": null
-      }
-    ]
-  }
 }

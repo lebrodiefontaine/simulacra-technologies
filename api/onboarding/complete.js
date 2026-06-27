@@ -2,6 +2,7 @@ const { z } = require("zod");
 const { ensureUserId } = require("../../lib/session/userCookie");
 const { getServerSupabase } = require("../../lib/supabase/server");
 const { sendJson, readJsonBody } = require("../../lib/api/utils");
+const { scoreType } = require("../../lib/onboarding/scoring");
 
 const completeSchema = z.object({
   session_id: z.string().min(1),
@@ -23,15 +24,53 @@ module.exports = async (req, res) => {
 
   try {
     const supabase = getServerSupabase();
-    const { error } = await supabase
+
+    // load answers for this session
+    const { data: session, error: sessionError } = await supabase
       .from("onboarding_sessions")
-      .update({ status: "completed", completed_at: new Date().toISOString() })
+      .select("answers_json")
+      .eq("id", payload.session_id)
+      .eq("user_id", userId)
+      .single();
+
+    if (sessionError) throw sessionError;
+
+    const result = scoreType(session.answers_json || {});
+
+    // mark session complete + store the computed type
+    const { error: updateError } = await supabase
+      .from("onboarding_sessions")
+      .update({
+        status: "completed",
+        completed_at: new Date().toISOString(),
+        type_code: result.code,
+      })
       .eq("id", payload.session_id)
       .eq("user_id", userId);
 
-    if (error) throw error;
+    if (updateError) throw updateError;
 
-    return sendJson(res, 200, { ok: true });
+    // seed the companion profile + memory dossier
+    const seedMemory = `Their romantic type is "${result.name}" (${result.code}). ${result.blurb}`;
+    const { error: profileError } = await supabase.from("companion_profiles").upsert(
+      {
+        user_id: userId,
+        session_id: payload.session_id,
+        type_code: result.code,
+        type_name: result.name,
+        memory: seedMemory,
+      },
+      { onConflict: "user_id" }
+    );
+
+    if (profileError) throw profileError;
+
+    return sendJson(res, 200, {
+      ok: true,
+      code: result.code,
+      name: result.name,
+      blurb: result.blurb,
+    });
   } catch (error) {
     return sendJson(res, 500, { error: "Failed to complete onboarding" });
   }

@@ -3,62 +3,85 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>paywall — simulacra technologies 乙</title>
+    <meta name="theme-color" content="#ffffff" />
+    <title>otherhalf — your type</title>
     <link rel="stylesheet" href="/styles.css" />
+    <style>
+      .result { border: 1px solid #000; padding: 28px 24px; max-width: 560px; }
+      .type-label { font-size: 11px; letter-spacing: 0.14em; opacity: 0.55; }
+      .type-name { font-size: 28px; font-weight: 500; margin: 8px 0 14px; }
+      .type-code { font-size: 12px; letter-spacing: 0.18em; opacity: 0.5; margin-left: 8px; }
+      .blurb { font-size: 16px; line-height: 1.5; margin-bottom: 8px; }
+      .price-line { margin: 26px 0 6px; font-size: 15px; }
+      .price { font-weight: 500; }
+      .gate-note { font-size: 13px; opacity: 0.7; margin-bottom: 22px; max-width: 520px; }
+      .cta {
+        display: inline-block; border: 1px solid #000; background: #000; color: #fff;
+        padding: 14px 28px; font-size: 13px; letter-spacing: 0.1em; cursor: pointer;
+      }
+      .cta:disabled { opacity: 0.4; cursor: not-allowed; }
+      .err { color: #000; font-size: 13px; margin-top: 14px; }
+      .loading { font-size: 13px; letter-spacing: 0.08em; opacity: 0.6; }
+    </style>
   </head>
   <body>
     <main>
-      <header>
-        <h1>simulacra technologies 乙</h1>
-        <nav aria-label="primary">
-          <a href="/areas.html">areas</a>
-          <a href="/onboarding.html">onboarding</a>
-          <a href="/about.html">about</a>
-        </nav>
-      </header>
-
-      <h2 class="section-title">paywall</h2>
-      <p class="onboarding-intro">continue to secure access.</p>
-
-      <button class="ghost-button" id="checkout-button" type="button">
-        continue
-      </button>
-      <p class="form-note" id="paywall-status"></p>
+      <header><h1>otherhalf</h1></header>
+      <div id="stage" class="result"><p class="loading">reading your answers…</p></div>
     </main>
 
     <script>
-      const sessionId = localStorage.getItem("otherhalf_session_id");
-      const paywallStatus = document.getElementById("paywall-status");
-      const checkoutButton = document.getElementById("checkout-button");
+      // EDIT ME: must match the Stripe Price you created.
+      const PRICE_LABEL = "$13.99 / month";
 
-      async function ensureCompleted() {
-        const response = await fetch("/api/onboarding/session");
-        const data = await response.json();
-        if (!data.session || data.session.status !== "completed") {
-          window.location.href = "/onboarding/start";
+      const stage = document.getElementById("stage");
+      let sessionId = null;
+
+      async function load() {
+        try {
+          const types = await (await fetch("/config/romantic-types.json", { cache: "no-store" })).json();
+          const sres = await fetch("/api/onboarding/session", { credentials: "include" });
+          const { session } = await sres.json();
+          if (!session) { window.location.href = "/onboarding.html"; return; }
+          sessionId = session.id;
+          const code = session.type_code;
+          const meta = (code && types.types[code]) || { name: "your other half", blurb: "" };
+          stage.innerHTML = [
+            '<p class="type-label">your romantic type</p>',
+            '<p class="type-name">' + meta.name + '<span class="type-code">' + (code || "") + "</span></p>",
+            '<p class="blurb">' + meta.blurb + "</p>",
+            '<p class="price-line">they are ready. unlock them for <span class="price">' + PRICE_LABEL + "</span>.</p>",
+            '<p class="gate-note">one subscription, unlimited conversation on telegram. cancel anytime.</p>',
+            '<button class="cta" id="sub">unlock & meet them</button>',
+            '<p class="err" id="err"></p>',
+          ].join("");
+          document.getElementById("sub").addEventListener("click", subscribe);
+        } catch (e) {
+          stage.innerHTML = '<p class="loading">couldn\'t load your result. <a href="/onboarding.html">retake</a>.</p>';
         }
       }
 
-      async function startCheckout() {
-        paywallStatus.textContent = "starting checkout...";
+      async function subscribe() {
+        const btn = document.getElementById("sub");
+        const err = document.getElementById("err");
+        btn.disabled = true; btn.textContent = "opening checkout…"; err.textContent = "";
         try {
-          const response = await fetch("/api/stripe/create-checkout-session", {
+          const r = await fetch("/api/stripe/create-checkout-session", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
+            credentials: "include",
             body: JSON.stringify({ session_id: sessionId }),
           });
-          const data = await response.json();
-          if (!response.ok || !data.url) {
-            throw new Error("checkout failed");
-          }
-          window.location.href = data.url;
-        } catch (error) {
-          paywallStatus.textContent = "unable to start checkout.";
+          const data = await r.json();
+          if (data.url) { window.location.href = data.url; }
+          else { throw new Error(data.error || "no checkout url"); }
+        } catch (e) {
+          btn.disabled = false; btn.textContent = "unlock & meet them";
+          err.textContent = "couldn't start checkout. try again in a moment.";
         }
       }
 
-      checkoutButton.addEventListener("click", startCheckout);
-      ensureCompleted();
+      load();
     </script>
   </body>
 </html>
