@@ -1,40 +1,18 @@
 {
-  "version": 2,
   "headers": [
     {
       "source": "/service-worker.js",
       "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
-        }
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
       ]
     },
     {
       "source": "/(.*)\\.html",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store"
-        }
-      ]
+      "headers": [{ "key": "Cache-Control", "value": "no-store" }]
     }
   ],
-  "builds": [
-    {
-      "src": "api/**/*.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "**/*",
-      "use": "@vercel/static"
-    }
-  ],
-  "routes": [
-    { "src": "/onboarding/?", "dest": "/onboarding.html" },
-    { "src": "/onboarding/(start|quiz|images|review)(/.*)?", "dest": "/onboarding.html" },
-    { "src": "/paywall", "dest": "/paywall/index.html" },
-    { "src": "/success", "dest": "/success/index.html" },
-    { "src": "/cancel", "dest": "/cancel/index.html" }
+  "rewrites": [
+    { "source": "/onboarding", "destination": "/onboarding.html" },
+    { "source": "/onboarding/:rest*", "destination": "/onboarding.html" }
   ]
 }
