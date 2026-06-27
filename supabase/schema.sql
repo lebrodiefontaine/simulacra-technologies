@@ -5,6 +5,18 @@
 create extension if not exists "pgcrypto";
 
 -- ---------------------------------------------------------------------------
+-- RESET — drop existing tables for a clean rebuild. DESTRUCTIVE: deletes data.
+-- ---------------------------------------------------------------------------
+drop table if exists telegram_messages   cascade;
+drop table if exists telegram_links      cascade;
+drop table if exists checkout_events     cascade;
+drop table if exists subscriptions       cascade;
+drop table if exists companion_profiles  cascade;
+drop table if exists image_preferences   cascade;
+drop table if exists onboarding_answers  cascade;
+drop table if exists onboarding_sessions cascade;
+
+-- ---------------------------------------------------------------------------
 -- onboarding
 -- ---------------------------------------------------------------------------
 create table if not exists onboarding_sessions (
