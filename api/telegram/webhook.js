@@ -7,7 +7,7 @@ const {
   buildMemoryUpdatePrompt,
 } = require("../../lib/persona/build");
 
-const HISTORY_LIMIT = 20;
+const HISTORY_LIMIT = 30;
 
 module.exports = async (req, res) => {
   if (req.method !== "POST") {
@@ -67,7 +67,7 @@ module.exports = async (req, res) => {
 
           const { data: profile } = await supabase
             .from("companion_profiles")
-            .select("type_code, type_name, memory")
+            .select("type_code, type_name, memory, persona")
             .eq("user_id", link.user_id)
             .single();
 
@@ -75,6 +75,7 @@ module.exports = async (req, res) => {
             code: profile?.type_code,
             displayName: tgFirstName,
             memory: profile?.memory,
+            persona: profile?.persona,
           });
 
           await sendChatAction(chatId, "typing");
@@ -89,6 +90,7 @@ module.exports = async (req, res) => {
               },
             ]);
           } catch (e) {
+            console.error("opener generation failed:", e.message);
             opener = "hi. i've been waiting for you. tell me — what's your name?";
           }
           await sendMessage(chatId, opener);
@@ -145,7 +147,7 @@ module.exports = async (req, res) => {
     // load profile + recent history
     const { data: profile } = await supabase
       .from("companion_profiles")
-      .select("type_code, type_name, memory")
+      .select("type_code, type_name, memory, persona")
       .eq("user_id", link.user_id)
       .single();
 
@@ -162,6 +164,7 @@ module.exports = async (req, res) => {
       code: profile?.type_code,
       displayName: tgFirstName,
       memory: profile?.memory,
+      persona: profile?.persona,
     });
 
     const messages = [
@@ -175,6 +178,7 @@ module.exports = async (req, res) => {
     try {
       reply = await chat(messages);
     } catch (e) {
+      console.error("chat reply failed:", e.message);
       reply = "i'm here — give me a second, my mind wandered to you.";
     }
 

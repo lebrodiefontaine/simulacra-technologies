@@ -59,7 +59,8 @@ create table if not exists companion_profiles (
   session_id uuid,
   type_code  text,
   type_name  text,
-  memory     text not null default '',
+  persona    text,                         -- bespoke character, generated once at onboarding
+  memory     text not null default '',     -- evolving dossier, updated every turn
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

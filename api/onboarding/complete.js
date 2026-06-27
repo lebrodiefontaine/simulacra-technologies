@@ -3,10 +3,26 @@ const { ensureUserId } = require("../../lib/session/userCookie");
 const { getServerSupabase } = require("../../lib/supabase/server");
 const { sendJson, readJsonBody } = require("../../lib/api/utils");
 const { scoreType } = require("../../lib/onboarding/scoring");
+const { loadOnboardingConfig } = require("../../lib/onboarding/config");
+const { composeFragments, buildPersonaGenerationPrompt } = require("../../lib/persona/build");
+const { chat } = require("../../lib/llm/deepseek");
 
 const completeSchema = z.object({
   session_id: z.string().min(1),
 });
+
+// Turn the raw answers into a readable summary for persona generation.
+function summarizeAnswers(answers) {
+  const config = loadOnboardingConfig();
+  const lines = [];
+  for (const q of config.questions) {
+    const val = answers[q.id];
+    if (!val) continue;
+    const opt = (q.options || []).find((o) => o.value === val);
+    lines.push(`- ${q.prompt} -> ${opt ? opt.label : val}`);
+  }
+  return lines.join("\n");
+}
 
 module.exports = async (req, res) => {
   if (req.method !== "POST") {
@@ -25,7 +41,6 @@ module.exports = async (req, res) => {
   try {
     const supabase = getServerSupabase();
 
-    // load answers for this session
     const { data: session, error: sessionError } = await supabase
       .from("onboarding_sessions")
       .select("answers_json")
@@ -35,9 +50,9 @@ module.exports = async (req, res) => {
 
     if (sessionError) throw sessionError;
 
-    const result = scoreType(session.answers_json || {});
+    const answers = session.answers_json || {};
+    const result = scoreType(answers);
 
-    // mark session complete + store the computed type
     const { error: updateError } = await supabase
       .from("onboarding_sessions")
       .update({
@@ -50,7 +65,27 @@ module.exports = async (req, res) => {
 
     if (updateError) throw updateError;
 
-    // seed the companion profile + memory dossier
+    // Generate the bespoke character ONCE from the answers (best-effort).
+    let persona = null;
+    try {
+      persona = await chat(
+        [
+          {
+            role: "user",
+            content: buildPersonaGenerationPrompt({
+              typeName: result.name,
+              blurb: result.blurb,
+              fragments: composeFragments(result.code),
+              answerSummary: summarizeAnswers(answers),
+            }),
+          },
+        ],
+        { temperature: 0.95, max_tokens: 600 }
+      );
+    } catch (e) {
+      console.error("persona generation failed:", e.message);
+    }
+
     const seedMemory = `Their romantic type is "${result.name}" (${result.code}). ${result.blurb}`;
     const { error: profileError } = await supabase.from("companion_profiles").upsert(
       {
@@ -58,6 +93,7 @@ module.exports = async (req, res) => {
         session_id: payload.session_id,
         type_code: result.code,
         type_name: result.name,
+        persona: persona || null,
         memory: seedMemory,
       },
       { onConflict: "user_id" }
